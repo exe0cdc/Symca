@@ -1,7 +1,7 @@
 import subprocess
 from os import devnull
 import sys
-
+from re import sub
 from sympy import Symbol, sympify, nsimplify, fraction, S
 from sympy.matrices import Matrix, diag, NonSquareMatrixError
 from CCobjects import CCBase, CCoef
@@ -463,3 +463,33 @@ class SymcaToolBox(object):
             )
 
         return cc_object_list
+
+    @staticmethod
+    def expression_to_latex(expression):
+        if type(expression) != str:
+            expression = str(expression)
+
+        #elasticities
+        expr = sub(r'ec(\S*?)_(\S*?\b)',r'\\varepsilon^{\1}_{\2}',expression)
+        #fluxes
+        expr = sub(r'J_(\S*?\b)',r'J_{\1}',expr)
+        #controls
+        expr = sub(r'cc(\S*?)_(\S*?\b)',r'C^{\1}_{\2}',expr)
+        #main fraction division
+        expr = sub(r'\)/\(',r'   ',expr)
+        #remove ( and )
+        expr = sub(r'\)',r'',expr)
+        expr = sub(r'\(',r'',expr)
+        #main fraction
+        expr = sub(r'(\S*[^\)])/([^\(]\S*)',r'\\frac{\1}{\2}',expr)
+        #sub fractions
+        expr = sub(r'(.*})\s\s\s(\\frac{.*)',r'\\frac{\1}{\2}',expr)
+        #times
+        expr = sub(r'\*',r'\\cdot',expr)
+
+
+        return expr
+
+    
+
+            

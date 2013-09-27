@@ -124,7 +124,7 @@ class CCoef(CCBase):
 
 class CPattern(CCBase):
     """docstring for CPattern"""
-
+    
     def __init__(self, mod, name, expression, denominator, parent):
         super(CPattern, self).__init__(mod, name, expression)
         self.numerator = expression
