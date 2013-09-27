@@ -27,18 +27,17 @@ class CCBase(object):
         is None and returns self._value"""
         if not self._value:
             self._calc_value()
-
         return self._value
 
 
 class CCoef(CCBase):
     """The object the stores control coefficients. Inherits from CCBase"""
 
-    def __init__(self, mod, name, expression, common_denom):
+    def __init__(self, mod, name, expression, denominator):
         super(CCoef, self).__init__(mod, name, expression)
         self.numerator = expression
-        self.common_denom = common_denom
-        self.expression = self.numerator / self.common_denom.expression
+        self.denominator = denominator
+        self.expression = self.numerator / self.denominator.expression
         self._control_patterns = None
 
 
@@ -104,7 +103,7 @@ class CCoef(CCBase):
         cps = []
         for i, pattern in enumerate(pattens):
             name = 'CP' + str(1 + i)
-            cp = CPattern(self.mod, name, pattern, self.common_denom, self)
+            cp = CPattern(self.mod, name, pattern, self.denominator, self)
             setattr(self, name, cp)
             cps.append(cp)
         self._control_patterns = cps
@@ -126,11 +125,11 @@ class CCoef(CCBase):
 class CPattern(CCBase):
     """docstring for CPattern"""
 
-    def __init__(self, mod, name, expression, common_denom, parent):
+    def __init__(self, mod, name, expression, denominator, parent):
         super(CPattern, self).__init__(mod, name, expression)
         self.numerator = expression
-        self.common_denom = common_denom
-        self.expression = self.numerator / self.common_denom.expression
+        self.denominator = denominator
+        self.expression = self.numerator / self.denominator.expression
         self.parent = parent
         self._percentage = None
 
