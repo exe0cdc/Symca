@@ -1,16 +1,21 @@
 from sympy.matrices import Matrix
 
 from SymcaToolBox import SymcaToolBox
+from LatexOut import LatexOut
 
 
 class Symca(object):
     def __init__(self, mod):
         super(Symca, self).__init__()
         self.mod = mod
-        self.tools = SymcaToolBox(
-            out_file_name='/home/carl/temp.txt',
-            in_file_name='/home/carl/temp1.txt'
-        )
+        self.tools = SymcaToolBox()       
+
+        self._main_dir = 'sympy_symca'
+        self.tools.make_path(self.mod, self._main_dir)
+
+        self._latex_out = LatexOut(self)
+
+        self._object_populated = False
 
         self._nmatrix = None
         self._species = None
@@ -31,7 +36,11 @@ class Symca(object):
         self._es_matrix = None
         self._esL = None
         self._ematrix = None
-        
+
+
+
+
+
 
     @property
     def nmatrix(self):
@@ -195,15 +204,27 @@ class Symca(object):
 
         return self._ematrix
 
-    def do_symca(self):
+    def path_to(self,path):
+        full_path = self.tools.make_path(self.mod, self._main_dir, path)
+        return full_path
 
-        CC_i_num, common_denom_expr = self.tools.invert(self.ematrix)
+    def export_latex(self):
+        self._latex_out.make_main()
+
+    def do_symca(self):
+        self.mod.doMca()
+
+        CC_i_num, common_denom_expr = self.tools.invert(
+            self.ematrix,
+            self.path_to('temp')
+        )
 
         cc_sol = self.tools.solve_dep(
             CC_i_num,
             self.scaled_k0,
             self.scaled_l0,
-            self.num_ind_fluxes
+            self.num_ind_fluxes,
+            self.path_to('temp')
         )
 
         cc_sol, common_denom_expr = self.tools.fix_expressions(
@@ -232,4 +253,5 @@ class Symca(object):
         self.CC = cc_objects
         for cc in cc_objects:
             setattr(self, cc.name, cc)
+        self._object_populated = True
 

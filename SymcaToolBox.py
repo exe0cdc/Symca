@@ -1,5 +1,5 @@
 import subprocess
-from os import devnull
+from os import devnull, path, mkdir
 import sys
 from re import sub
 from sympy import Symbol, sympify, nsimplify, fraction, S
@@ -14,10 +14,21 @@ class SymcaToolBox(object):
     a filename variable used for temp storage of maxima output"""
 
 
-    def __init__(self, out_file_name, in_file_name):
-        super(SymcaToolBox, self).__init__()
-        self.OUT_FILE_NAME = out_file_name
-        self.IN_FILE_NAME = in_file_name
+    @staticmethod
+    def make_path(mod,subdir,subsubdir = None):
+        base_dir = mod.ModelOutput
+        main_dir = base_dir + '/' + subdir
+        mod_dir = main_dir + '/' + mod.ModelFile[:-4]
+        if not path.exists(main_dir):
+            mkdir(main_dir)
+        if not path.exists(mod_dir):
+            mkdir(mod_dir)
+        if subsubdir:
+            branch_dir = mod_dir + '/' + subsubdir
+            if not path.exists(branch_dir):
+                mkdir(branch_dir)
+            return branch_dir + '/'
+
 
     @staticmethod
     def get_nmatrix(mod):
@@ -263,33 +274,34 @@ class SymcaToolBox(object):
 
         return det
 
-
-    def invert(self, matrix):
+    @staticmethod
+    def invert(matrix,path_to):
         """
         Returns the numerators of the inverted martix separately from the
         common denominator (the determinant of the matrix)
         """
-        common_denom = self.det_bareis(matrix)
-        adjugate = self.adjugate_matrix(matrix)
+        common_denom = SymcaToolBox.det_bareis(matrix)
+        adjugate = SymcaToolBox.adjugate_matrix(matrix)
 
-        common_denom = self.maxima_factor(common_denom)
+        common_denom = SymcaToolBox.maxima_factor(common_denom, path_to)
         #adjugate     = self._maxima_factor('/home/carl/test.txt',adjugate)
 
 
         cc_i_sol = adjugate, common_denom
         return cc_i_sol
 
-
-    def maxima_factor(self, expression):
+    @staticmethod
+    def maxima_factor(expression,path_to):
         """
         This function is equivalent to the sympy.cancel()
         function but uses maxima instead
         """
 
-        maxima_in_file = self.IN_FILE_NAME
-        maxima_out_file = self.OUT_FILE_NAME
-        try:
+        maxima_in_file = path_to + 'in.txt'
+        maxima_out_file = path_to + 'out.txt'
+        if expression.is_Matrix:
             expr_mat = expression[:, :]
+            #print expr_mat
             print 'Simplifying matrix with ' + str(len(expr_mat)) + ' elements'
             for i, e in enumerate(expr_mat):
 
@@ -298,9 +310,12 @@ class SymcaToolBox(object):
                 if (i + 1) % 50 == 0:
                     sys.stdout.write(' ' + str(i + 1) + '\n')
                     sys.stdout.flush()
-                expr_mat[i] = self.maxima_factor(e)
+                #print e
+                expr_mat[i] = SymcaToolBox.maxima_factor(e,path_to)
+            sys.stdout.write('\n')
+            sys.stdout.flush()
             return expr_mat
-        except:
+        else:
             batch_string = (
                 'stardisp:true;stringout("'
                 + maxima_out_file + '",factor(' + str(expression) + '));')
@@ -322,7 +337,8 @@ class SymcaToolBox(object):
             #print frac[0].expand()/frac[1].expand()
             return frac[0].expand() / frac[1].expand()
 
-    def solve_dep(self, cc_i_num, scaledk0, scaledl0, num_ind_fluxes):
+    @staticmethod
+    def solve_dep(cc_i_num, scaledk0, scaledl0, num_ind_fluxes,path_to):
         """
         Calculates the dependent control matrices from the independent control
         matrix CC_i_solution
@@ -341,7 +357,7 @@ class SymcaToolBox(object):
 
         cc_sol = tempmatrix
 
-        cc_sol = self.maxima_factor(cc_sol)
+        cc_sol = SymcaToolBox.maxima_factor(cc_sol,path_to)
 
         #print len(j_cci_sol)
         #print len(j_ccd_sol)
@@ -421,9 +437,10 @@ class SymcaToolBox(object):
                 denom = denom * species_dependent[row]
             return denom.nsimplify()
 
-    def fix_expressions(self, cc_num, common_denom_expr, lmatrix, species_independent, species_dependent):
+    @staticmethod
+    def fix_expressions(cc_num, common_denom_expr, lmatrix, species_independent, species_dependent):
 
-        fix_denom = self.get_fix_denom(
+        fix_denom = SymcaToolBox.get_fix_denom(
             lmatrix,
             species_independent,
             species_dependent
