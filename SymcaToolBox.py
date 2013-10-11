@@ -483,6 +483,13 @@ class SymcaToolBox(object):
 
     @staticmethod
     def expression_to_latex(expression):
+        #At the moment this function can turn (some) expressions containing
+        #elasticities and control coefficients into 
+        #latex strings. One problem is that I assumed that expressions with 
+        #fractions will always have the form 
+        #(x1/y1+x2/y2+x3/y3)/(z1/u1+z2/u2+z3/u3). However when the numerator
+        #only has one term the form is: x1/(y1*(z1/u1+z2/u2+z3/u3))
+        #and in this case the function does not work correctly. 
         if type(expression) != str:
             expression = str(expression)
 
@@ -492,8 +499,8 @@ class SymcaToolBox(object):
         expr = sub(r'J_(\S*?\b)',r'J_{\1}',expr)
         #controls
         expr = sub(r'cc(\S*?)_(\S*?\b)',r'C^{\1}_{\2}',expr)
-        #main fraction division
-        expr = sub(r'\)/\(',r'   ',expr)
+        #main fraction division        
+        expr = sub(r'\)/\(',r'   ',expr)      
         #remove ( and )
         expr = sub(r'\)',r'',expr)
         expr = sub(r'\(',r'',expr)

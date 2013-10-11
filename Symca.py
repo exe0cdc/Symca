@@ -250,8 +250,10 @@ class Symca(object):
             common_denom_expr
         )
 
-        self.CC = cc_objects
+
+        
         for cc in cc_objects:
             setattr(self, cc.name, cc)
+        self.CC = cc_objects[1:]
         self._object_populated = True
 

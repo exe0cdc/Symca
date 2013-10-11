@@ -1,5 +1,5 @@
 import numpy as np
-
+from PYCtools import PYCtools as PYStools
 from sympy import Symbol
 
 
@@ -12,6 +12,10 @@ class CCBase(object):
         self.mod = mod
         self.name = name
         self._value = None
+        
+        self.latex_expression = PYCtools.expression_to_latex(
+            self.expression
+        )
 
     def _calc_value(self):
         """Calculates the value of the expression"""
@@ -36,9 +40,20 @@ class CCoef(CCBase):
     def __init__(self, mod, name, expression, denominator):
         super(CCoef, self).__init__(mod, name, expression)
         self.numerator = expression
-        self.denominator = denominator
+        self.denominator = denominator.expression
         self.expression = self.numerator / self.denominator.expression
+        self.denominator_object = denominator
+
+        self.latex_numerator = PYCtools.expression_to_latex(
+            self.numerator
+        )
+        self.latex_expression_full = '\\frac{' + self.latex_numerator + '}{' \
+                                     + self.denominator.latex_expression
+        self.latex_expression =  self.latex_numerator + '/ \\Sigma'
+
         self._control_patterns = None
+
+        
 
 
     @property
@@ -128,9 +143,18 @@ class CPattern(CCBase):
     def __init__(self, mod, name, expression, denominator, parent):
         super(CPattern, self).__init__(mod, name, expression)
         self.numerator = expression
-        self.denominator = denominator
+        self.denominator = denominator.expression
         self.expression = self.numerator / self.denominator.expression
+        self.denominator_object = denominator
         self.parent = parent
+        
+        self.latex_numerator = PYCtools.expression_to_latex(
+            self.numerator
+        )
+        self.latex_expression_full = '\\frac{' + self.latex_numerator + '}{' \
+                                     + self.denominator.latex_expression
+        self.latex_expression =  self.latex_numerator + '/ \\Sigma'
+
         self._percentage = None
 
     @property
