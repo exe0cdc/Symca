@@ -46,7 +46,7 @@ class PyscesToolBox(object):
         #sub fractions
         expr = sub(r'(.*})\s\s\s(\\frac{.*)',r'\\frac{\1}{\2}',expr)
         #times
-        expr = sub(r'\*',r'\\cdot',expr)
+        expr = sub(r'\*',r'\\cdot ',expr)
 
 
         return expr

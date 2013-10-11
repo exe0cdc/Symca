@@ -1,17 +1,17 @@
 from sympy.matrices import Matrix
 
-from SymcaToolBox import SymcaToolBox
+from PyscesToolBox import PyscesToolBox as PYCtools
+from SymcaToolBox import SymcaToolBox as SMCAtools
 from LatexOut import LatexOut
 
 
 class Symca(object):
     def __init__(self, mod):
         super(Symca, self).__init__()
-        self.mod = mod
-        self.tools = SymcaToolBox()       
+        self.mod = mod        
 
         self._main_dir = 'sympy_symca'
-        self.tools.make_path(self.mod, self._main_dir)
+        PYCtools.make_path(self.mod, self._main_dir)
 
         self._latex_out = LatexOut(self)
 
@@ -45,21 +45,21 @@ class Symca(object):
     @property
     def nmatrix(self):
         if not self._nmatrix:
-            self._nmatrix = self.tools.get_nmatrix(self.mod)
+            self._nmatrix = SMCAtools.get_nmatrix(self.mod)
 
         return self._nmatrix
 
     @property
     def num_ind_species(self):
         if not self._num_ind_species:
-            self._num_ind_species = self.tools.get_num_ind_species(self.mod)
+            self._num_ind_species = SMCAtools.get_num_ind_species(self.mod)
 
         return self._num_ind_species
 
     @property
     def species(self):
         if not self._species:
-            self._species = self.tools.get_species_vector(self.mod)
+            self._species = SMCAtools.get_species_vector(self.mod)
 
         return self._species
 
@@ -84,14 +84,14 @@ class Symca(object):
     @property
     def num_ind_fluxes(self):
         if not self._num_ind_fluxes:
-            self._num_ind_fluxes = self.tools.get_num_ind_fluxes(self.mod)
+            self._num_ind_fluxes = SMCAtools.get_num_ind_fluxes(self.mod)
 
         return self._num_ind_fluxes
 
     @property
     def fluxes(self):
         if not self._fluxes:
-            self._fluxes = self.tools.get_fluxes_vector(self.mod)
+            self._fluxes = SMCAtools.get_fluxes_vector(self.mod)
 
         return self._fluxes
 
@@ -130,7 +130,7 @@ class Symca(object):
     @property
     def subs_fluxes(self):
         if not self._subs_fluxes:
-            self._subs_fluxes = self.tools.substitute_fluxes(
+            self._subs_fluxes = SMCAtools.substitute_fluxes(
                 self.fluxes,
                 self.kmatrix
             )
@@ -140,7 +140,7 @@ class Symca(object):
     @property
     def scaled_l(self):
         if not self._scaled_l:
-            self._scaled_l = self.tools.scale_matrix(
+            self._scaled_l = SMCAtools.scale_matrix(
                 self.species,
                 self.lmatrix,
                 self.species_independent
@@ -151,7 +151,7 @@ class Symca(object):
     @property
     def scaled_k(self):
         if not self._scaled_k:
-            self._scaled_k = self.tools.scale_matrix(
+            self._scaled_k = SMCAtools.scale_matrix(
                 self.subs_fluxes,
                 self.kmatrix,
                 self.fluxes_independent
@@ -177,7 +177,7 @@ class Symca(object):
     @property
     def es_matrix(self):
         if not self._es_matrix:
-            self._es_matrix = self.tools.get_es_matrix(
+            self._es_matrix = SMCAtools.get_es_matrix(
                 self.mod,
                 self.nmatrix,
                 self.fluxes,
@@ -196,7 +196,7 @@ class Symca(object):
     @property
     def ematrix(self):
         if not self._ematrix:
-            self._ematrix = self.tools.simplify_matrix(
+            self._ematrix = SMCAtools.simplify_matrix(
                 self.scaled_k.row_join(
                     self.esL
                 )
@@ -205,7 +205,7 @@ class Symca(object):
         return self._ematrix
 
     def path_to(self,path):
-        full_path = self.tools.make_path(self.mod, self._main_dir, path)
+        full_path = PYCtools.make_path(self.mod, self._main_dir, path)
         return full_path
 
     def export_latex(self):
@@ -214,12 +214,12 @@ class Symca(object):
     def do_symca(self):
         self.mod.doMca()
 
-        CC_i_num, common_denom_expr = self.tools.invert(
+        CC_i_num, common_denom_expr = SMCAtools.invert(
             self.ematrix,
             self.path_to('temp')
         )
 
-        cc_sol = self.tools.solve_dep(
+        cc_sol = SMCAtools.solve_dep(
             CC_i_num,
             self.scaled_k0,
             self.scaled_l0,
@@ -227,7 +227,7 @@ class Symca(object):
             self.path_to('temp')
         )
 
-        cc_sol, common_denom_expr = self.tools.fix_expressions(
+        cc_sol, common_denom_expr = SMCAtools.fix_expressions(
             cc_sol,
             common_denom_expr,
             self.lmatrix,
@@ -235,7 +235,7 @@ class Symca(object):
             self.species_dependent
         )
 
-        cc_names = self.tools.build_cc_matrix(
+        cc_names = SMCAtools.build_cc_matrix(
             self.fluxes,
             self.fluxes_independent,
             self.species_independent,
@@ -243,7 +243,7 @@ class Symca(object):
             self.species_dependent
         )
 
-        cc_objects = self.tools.spawn_cc_objects(
+        cc_objects = SMCAtools.spawn_cc_objects(
             self.mod,
             cc_sol,
             cc_names,
