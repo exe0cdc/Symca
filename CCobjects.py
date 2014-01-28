@@ -1,5 +1,5 @@
 import numpy as np
-
+from PyscesToolBox import PyscesToolBox as PYCtools
 from sympy import Symbol
 
 
@@ -8,10 +8,36 @@ class CCBase(object):
 
     def __init__(self, mod, name, expression):
         super(CCBase, self).__init__()
+
         self.expression = expression
         self.mod = mod
         self.name = name
+        self._latex_name = '\\Sigma'
+
         self._value = None
+        self._latex_expression = None
+        
+        
+
+    @property
+    def latex_expression(self):
+        if not self._latex_expression:
+            self._latex_expression = PYCtools.expression_to_latex(
+            self.expression
+            )
+        return self._latex_expression
+
+    @property
+    def latex_name(self):
+        return self._latex_name
+
+    @property
+    def value(self):
+        """The value property. Calls self._calc_value() when self._value
+        is None and returns self._value"""
+        if not self._value:
+            self._calc_value()
+        return self._value
 
     def _calc_value(self):
         """Calculates the value of the expression"""
@@ -21,25 +47,57 @@ class CCBase(object):
             subsdic[symbol] = getattr(self.mod, str(symbol))
         self._value = self.expression.subs(subsdic)
 
-    @property
-    def value(self):
-        """The value property. Calls self._calc_value() when self._value
-        is None and returns self._value"""
-        if not self._value:
-            self._calc_value()
-
-        return self._value
+    
 
 
 class CCoef(CCBase):
     """The object the stores control coefficients. Inherits from CCBase"""
 
-    def __init__(self, mod, name, expression, common_denom):
+    def __init__(self, mod, name, expression, denominator):
         super(CCoef, self).__init__(mod, name, expression)
         self.numerator = expression
-        self.common_denom = common_denom
-        self.expression = self.numerator / self.common_denom.expression
+        self.denominator = denominator.expression
+        self.expression = self.numerator / denominator.expression
+        self.denominator_object = denominator
+
+        self._latex_numerator = None
+        self._latex_expression_full = None
+        self._latex_expression =  None
+        self._latex_name = None
+
         self._control_patterns = None
+
+    @property
+    def latex_numerator(self):
+        if not self._latex_numerator:
+            self._latex_numerator = PYCtools.expression_to_latex(
+            self.numerator
+            )
+        return self._latex_numerator
+
+    @property
+    def latex_expression_full(self):
+        if not self._latex_expression_full:
+            full_expr = '\\frac{' + self.latex_numerator + '}{' \
+                         + self.denominator_object.latex_expression
+            self._latex_expression_full = full_expr
+        return self._latex_expression_full
+
+    @property
+    def latex_expression(self):
+        if not self._latex_expression:
+            self._latex_expression =  self.latex_numerator + '/ \\,\\Sigma'
+        return self._latex_expression
+
+    @property
+    def latex_name(self):
+        if not self._latex_name:
+            self._latex_name = PYCtools.expression_to_latex(
+            self.name
+            )
+        return self._latex_name
+
+        
 
 
     @property
@@ -104,7 +162,7 @@ class CCoef(CCBase):
         cps = []
         for i, pattern in enumerate(pattens):
             name = 'CP' + str(1 + i)
-            cp = CPattern(self.mod, name, pattern, self.common_denom, self)
+            cp = CPattern(self.mod, name, pattern, self.denominator_object, self)
             setattr(self, name, cp)
             cps.append(cp)
         self._control_patterns = cps
@@ -125,14 +183,50 @@ class CCoef(CCBase):
 
 class CPattern(CCBase):
     """docstring for CPattern"""
-
-    def __init__(self, mod, name, expression, common_denom, parent):
+    
+    def __init__(self, mod, name, expression, denominator, parent):
         super(CPattern, self).__init__(mod, name, expression)
         self.numerator = expression
-        self.common_denom = common_denom
-        self.expression = self.numerator / self.common_denom.expression
+        self.denominator = denominator.expression
+        self.expression = self.numerator / denominator.expression
+        self.denominator_object = denominator
         self.parent = parent
+        
+        self._latex_numerator = None
+        self._latex_expression_full = None
+        self._latex_expression =  None
+        self._latex_name = None
         self._percentage = None
+
+    @property
+    def latex_numerator(self):
+        if not self._latex_numerator:
+            self._latex_numerator = PYCtools.expression_to_latex(
+            self.numerator
+            )
+        return self._latex_numerator
+
+    @property
+    def latex_expression_full(self):
+        if not self._latex_expression_full:
+            full_expr = '\\frac{' + self.latex_numerator + '}{' \
+                         + self.denominator_object.latex_expression
+            self._latex_expression_full = full_expr
+        return self._latex_expression_full
+
+    @property
+    def latex_expression(self):
+        if not self._latex_expression:
+            self._latex_expression =  self.latex_numerator + '/ \\,\\Sigma'
+        return self._latex_expression
+        
+    @property
+    def latex_name(self):
+        if not self._latex_name:
+            self._latex_name = PYCtools.expression_to_latex(
+            self.name
+            )
+        return self._latex_name
 
     @property
     def percentage(self):
