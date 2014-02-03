@@ -17,6 +17,8 @@ class PyscesToolBox(object):
             if not path.exists(branch_dir):
                 mkdir(branch_dir)
             return branch_dir + '/'
+        else:
+            return mod_dir + '/'
 
     @staticmethod
     def expression_to_latex(expression):
