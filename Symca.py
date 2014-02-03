@@ -4,14 +4,25 @@ from PyscesToolBox import PyscesToolBox as PYCtools
 from SymcaToolBox import SymcaToolBox as SMCAtools
 from LatexOut import LatexOut
 
+import logging
+
 
 class Symca(object):
     def __init__(self, mod):
         super(Symca, self).__init__()
+        
+
         self.mod = mod        
 
         self._main_dir = 'sympy_symca'
-        PYCtools.make_path(self.mod, self._main_dir)
+        self._working_dir = PYCtools.make_path(self.mod, self._main_dir)
+
+
+        logging.basicConfig(
+            filename = self._working_dir + 'symca.log',
+            level=logging.DEBUG
+        )
+        print self._working_dir + 'symca.log'
 
         self._latex_out = LatexOut(self)
 
@@ -36,10 +47,6 @@ class Symca(object):
         self._es_matrix = None
         self._esL = None
         self._ematrix = None
-
-
-
-
 
 
     @property
@@ -211,13 +218,20 @@ class Symca(object):
     def export_latex(self):
         self._latex_out.make_main()
 
+
     def do_symca(self):
         self.mod.doMca()
+        
 
         CC_i_num, common_denom_expr = SMCAtools.invert(
             self.ematrix,
             self.path_to('temp')
         )
+
+        logging.info ('CC_i_num:')        
+        logging.info (CC_i_num)
+        logging.info ('common_denom_expr:')
+        logging.info (common_denom_expr)
 
         cc_sol = SMCAtools.solve_dep(
             CC_i_num,
